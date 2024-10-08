@@ -1,18 +1,20 @@
-import { useState } from 'react'
-import Account from '../pages/Account'
-import { BrowserRouter, Routes, Route} from 'react-router-dom'
-import './index.css';
-import 'react-toastify/dist/ReactToastify.min.css';
+import { useState } from "react";
+import Account from "./pages/Account";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import UserContextProvider from "./state/UserContext";
+import "./index.css";
+import "react-toastify/dist/ReactToastify.min.css";
 
 function App() {
-
   return (
-    <BrowserRouter>
-    <Routes>
-      <Route path='/' Component={Account} />
-    </Routes>
-    </BrowserRouter>
-  )
+    <UserContextProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" Component={Account} />
+        </Routes>
+      </BrowserRouter>
+    </UserContextProvider>
+  );
 }
 
-export default App
+export default App;
