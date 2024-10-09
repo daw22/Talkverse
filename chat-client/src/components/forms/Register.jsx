@@ -1,8 +1,11 @@
 import { styled } from 'styled-components';
 import { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
+import instance from '../../utils/axinstance';
+import { useNavigate } from 'react-router-dom';
 
 function Register({ changeForm }) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -57,8 +60,13 @@ function Register({ changeForm }) {
     }
     return true;
 };
-  const submitForm = () =>{
+  const submitForm = async () =>{
     validateForm();
+    const response = await instance.post('/account/register', 
+      { username: formData.username, email: formData.email, password: formData.password}
+    );
+    console.log(response, response.status);
+    navigate('/setup', {state: response.data.id});
   }
   return (
     <Container>

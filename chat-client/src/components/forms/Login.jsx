@@ -2,9 +2,12 @@ import { styled } from "styled-components";
 import { useState, useContext } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { userContext } from "../../state/UserContext";
+import instance from '../../utils/axinstance';
+import { useNavigate } from 'react-router-dom';
 
 function Login({ changeForm }) {
   const user = useContext(userContext);
+  const navigate = useNavigate();
   const [usrEmail, setUsrEmail] = useState("");
   const [password, setPassword] = useState("");
   const validateForm = (data) => {
@@ -63,10 +66,19 @@ function Login({ changeForm }) {
     }
     return true;
   };
-  const submitForm = () => {
+  const submitForm = async () => {
     const type = usrEmail.includes("@") ? "email" : "username";
     const data = { [type]: usrEmail, password };
-    validateForm(data);
+    const validated = validateForm(data);
+    if (validated) {
+      console.log('validated');
+      const response = await instance.post('/account/login', data);
+      if (response.status == 200){
+        user.setUser(response.data.user);
+        localStorage.setItem('accessToken', response.data.token);
+        navigate('/chat');
+      }
+    }
   };
   return (
     <Container>
