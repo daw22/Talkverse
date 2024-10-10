@@ -10,6 +10,7 @@ function Login({ changeForm }) {
   const navigate = useNavigate();
   const [usrEmail, setUsrEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const validateForm = (data) => {
     console.log(data);
     if (data.email) {
@@ -71,12 +72,23 @@ function Login({ changeForm }) {
     const data = { [type]: usrEmail, password };
     const validated = validateForm(data);
     if (validated) {
-      console.log('validated');
-      const response = await instance.post('/account/login', data);
-      if (response.status == 200){
-        user.setUser(response.data.user);
-        localStorage.setItem('accessToken', response.data.token);
-        navigate('/chat');
+      setLoading(true);
+      try {
+        const response = await instance.post('/account/login', data);
+        if (response.status == 200){
+          setLoading(false);
+          user.setUser(response.data.user);
+          localStorage.setItem('accessToken', response.data.token);
+          navigate('/chat');
+        }
+      } catch(err) {
+        setLoading(false);
+        toast.error('Login failed. Wrong username/email or password', {
+          position: "bottom-right",
+          draggable: true,
+          autoClose: 6000,
+          pauseOnHover: true,
+        });
       }
     }
   };
@@ -95,7 +107,9 @@ function Login({ changeForm }) {
         placeholder="password"
         onChange={(e) => setPassword(e.target.value)}
       />
-      <SubmitButton onClick={submitForm}>Sign In</SubmitButton>
+      <SubmitButton onClick={submitForm} disabled={loading}>
+        { loading ? "Signing In ..." : "Sign In" }
+      </SubmitButton>
       <Span>
         Not registerd yet?
         <Span

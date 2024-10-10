@@ -1,12 +1,6 @@
-import { Navigate, useNavigate, Outlet, useLocation } from "react-router-dom";
-import { useContext } from "react";
-import { userContext } from "../state/UserContext";
-import instance from "../utils/axinstance";
+import { Navigate, Outlet } from "react-router-dom";
 
 function ProtectedRoute() {
-  const user = useContext(userContext).user;
-  const navigate = useNavigate();
-  const location = useLocation();
   const token = localStorage.getItem('accessToken');
 
   console.log(token);

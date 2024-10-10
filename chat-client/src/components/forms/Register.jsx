@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 function Register({ changeForm }) {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -60,14 +61,17 @@ function Register({ changeForm }) {
     }
     return true;
 };
-  const submitForm = async () =>{
-    validateForm();
-    const response = await instance.post('/account/register', 
-      { username: formData.username, email: formData.email, password: formData.password}
-    );
-    console.log(response, response.status);
-    navigate('/setup', {state: response.data.id});
-  }
+const submitForm = async () =>{
+  const validated = validateForm();
+    if (validated) {
+      setLoading(true);
+      const response = await instance.post('/account/register', 
+        { username: formData.username, email: formData.email, password: formData.password}
+      );
+      setLoading(false);
+      navigate('/setup', {state: response.data.id});
+    }
+}
   return (
     <Container>
       <Title>
@@ -92,7 +96,9 @@ function Register({ changeForm }) {
       placeholder='confirm password' 
       name='confirmPassword' 
       onChange={(e)=> handleChage(e.target.name, e.target.value) }/>
-      <SubmitButton onClick={submitForm}>Sign Up</SubmitButton>
+      <SubmitButton onClick={submitForm} disabled={loading}>
+        {loading ? "Signing up..." : "Sign Up" }
+      </SubmitButton>
       <Span>
         Already registerd?
         <Span style={{color: 'green', cursor: 'pointer', paddingLeft: '.5rem'}} onClick={()=>changeForm()}>

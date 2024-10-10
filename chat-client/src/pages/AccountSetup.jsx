@@ -5,13 +5,14 @@ import { userContext } from '../state/UserContext';
 import instance from '../utils/axinstance';
 import { CountrySelect, LanguageSelect } from 'react-country-state-city';
 import "react-country-state-city/dist/react-country-state-city.css";
+import { toast, ToastContainer } from 'react-toastify';
 
 function AccountSetup() {
   const location = useLocation();
   const id = location.state;
   const ctx = useContext(userContext);
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -23,13 +24,26 @@ function AccountSetup() {
     setFormData({...formData, [name]: value});
   };
   const submitForm = async () => {
-    //console.log(formData);
-    const response = await instance.post('/account/createprofile', {...formData, id});
-    if(response.status == 201) {
-      console.log('navigate to chat');
-      ctx.setUser(response.data.user);
-      localStorage.setItem('accessToken', response.data.token);
-      navigate('/chat');
+    setLoading(true);
+    console.log(formData);
+    try {
+      const response = await instance.post('/account/createprofile', {...formData, id});
+      if(response.status == 201) {
+        console.log(response.data);
+        ctx.setUser(response.data.user);
+        localStorage.setItem('accessToken', response.data.token);
+        setLoading(false);
+        navigate('/chat');
+      }
+    } catch(err){
+      console.log(err.response.data.error);
+      setLoading(false);
+      toast.error(err.response.data.error, {
+        position: 'bottom-right',
+          draggable: true,
+          autoClose: 6000,
+          pauseOnHover: true,
+      })
     }
   };
   return (
@@ -43,8 +57,11 @@ function AccountSetup() {
         <LanguageSelect placeHolder='Prefered Language' onChange={(e) => handleChage('language', e.name)}/>
       </div>
       <Bio placeholder='About your self' name='bio' onChange={(e) => handleChage(e.target.name, e.target.value)}/>
-      <SubmitButton onClick={submitForm}>Submit</SubmitButton>
+      <SubmitButton onClick={submitForm} disabled={loading}>
+        {loading ? "Loading..." : "Submit" }
+      </SubmitButton>
       </FormContainer>
+      <ToastContainer />
     </Container>
   )
 }
@@ -56,7 +73,7 @@ const Container = styled.div`
   background-position: center;
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: center;
   height: 100%;
 `;
 
