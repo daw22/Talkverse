@@ -3,9 +3,14 @@ import styled from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { userContext } from '../state/UserContext';
 import instance from '../utils/axinstance';
-import { CountrySelect, LanguageSelect } from 'react-country-state-city';
 import "react-country-state-city/dist/react-country-state-city.css";
 import { toast, ToastContainer } from 'react-toastify';
+import { storage } from '../utils/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import axios from 'axios';
+import { v4 } from 'uuid';
+import SelectCountry from '../components/SelectCountry';
+import SelectLanguage from '../components/SelectLanguage';
 
 function AccountSetup() {
   const location = useLocation();
@@ -19,26 +24,45 @@ function AccountSetup() {
     country: "",
     language: "en",
     bio: "",
+    profilePic: "",
   });
   const handleChage = (name, value) => {
     setFormData({...formData, [name]: value});
   };
+  const uploadInitials = async () => {
+    try{
+      const imageRef = ref(storage, `profilePics/${v4()}.svg`);
+      console.log('wht');
+      const url = `https://api.dicebear.com/9.x/initials/svg?seed=${formData.firstName}%${formData.lastName}&size=48&radius=50`; 
+      console.log(url);
+      const res = await axios.get(url, {responseType: 'blob'});
+      const blob = res.data;
+      const snapshot = await uploadBytes(imageRef, blob);
+      const downloadUrl = await getDownloadURL(snapshot.ref);
+      console.log(downloadUrl);
+      return downloadUrl;
+    } catch(err){
+      console.log(err);
+      return "";
+    }
+  }
   const submitForm = async () => {
     setLoading(true);
     console.log(formData);
     try {
+      const profilePicUrl = await uploadInitials();
+      formData.profilePic = profilePicUrl;
       const response = await instance.post('/account/createprofile', {...formData, id});
       if(response.status == 201) {
-        console.log(response.data);
         ctx.setUser(response.data.user);
         localStorage.setItem('accessToken', response.data.token);
         setLoading(false);
-        navigate('/chat');
+        uploadInitials();
+        navigate('/chat', {state: id});
       }
     } catch(err){
-      console.log(err.response.data.error);
       setLoading(false);
-      toast.error(err.response.data.error, {
+      toast.error('Unable to create profile.', {
         position: 'bottom-right',
           draggable: true,
           autoClose: 6000,
@@ -50,13 +74,24 @@ function AccountSetup() {
     <Container>
       <FormContainer>
       <Title>Account Setup</Title>
-      <Input placeholder='FirstName' name='firstName' onChange={(e) => handleChage(e.target.name, e.target.value)}/>
-      <Input placeholder='LastName' name='lastName' onChange={(e) => handleChage(e.target.name, e.target.value)}/>
+      <Input 
+      placeholder='FirstName'
+      name='firstName'
+      onChange={(e) => handleChage(e.target.name, e.target.value)}
+      />
+      <Input 
+      placeholder='LastName' 
+      name='lastName' 
+      onChange={(e) => handleChage(e.target.name, e.target.value)}
+      />
       <div style={{display: 'flex', justifyContent: 'space-between', width: '80%'}}>
-        <CountrySelect placeHolder='Select your country' onChange={(e) => handleChage('country', e.name)}/>
-        <LanguageSelect placeHolder='Prefered Language' onChange={(e) => handleChage('language', e.name)}/>
+        <SelectCountry formData={formData} setFormData={setFormData}/>
+        <SelectLanguage formData={formData} setFormData={setFormData}/>
       </div>
-      <Bio placeholder='About your self' name='bio' onChange={(e) => handleChage(e.target.name, e.target.value)}/>
+      <Bio 
+      placeholder='About your self' 
+      name='bio' onChange={(e) => handleChage(e.target.name, e.target.value)}
+      />
       <SubmitButton onClick={submitForm} disabled={loading}>
         {loading ? "Loading..." : "Submit" }
       </SubmitButton>

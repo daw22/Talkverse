@@ -5,11 +5,6 @@ export const userContext = createContext();
 
 const UserContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-
-  useEffect(()=>{
-    if(!user) setUser(localStorage.getItem('userData'));
-  },[]);
-
   return (
     <userContext.Provider value={{ user, setUser }}>
       {children}

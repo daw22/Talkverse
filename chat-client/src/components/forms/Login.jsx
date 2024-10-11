@@ -12,7 +12,6 @@ function Login({ changeForm }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const validateForm = (data) => {
-    console.log(data);
     if (data.email) {
       const emailRegx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const valid = emailRegx.test(data.email);
@@ -76,8 +75,13 @@ function Login({ changeForm }) {
       try {
         const response = await instance.post('/account/login', data);
         if (response.status == 200){
+          console.log(response.data);
           setLoading(false);
-          user.setUser(response.data.user);
+          if(!response.data.user) {
+            navigate('/setup', {state: response.data.accId});
+            return;
+          }
+          user.setUser(response.data.user[0]);
           localStorage.setItem('accessToken', response.data.token);
           navigate('/chat');
         }
