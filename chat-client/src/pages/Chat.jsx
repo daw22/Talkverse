@@ -4,13 +4,50 @@ import styled from 'styled-components';
 import instance from '../utils/axinstance';
 import { useNavigate } from 'react-router-dom';
 import MessageBox from '../components/MessageBox';
+import ChatBubble from '../components/ChatBubble';
+import { socket } from '../utils/socket';
 
 function Chat() {
   const ctx = useContext(userContext);
   const navigate = useNavigate();
   const [selectedUser, setSelectedUser] = useState(null);
+  const [messages, setMessages] = useState([]);
+
+  const sendMessage = (message) => {
+    if (!message || message === '') return;
+    if(!ctx.user) return;
+    const data = {
+      sender: ctx.user._id,
+      reciver: selectedUser._id,
+      senderLang: ctx.user.preferedLang,
+      reciverLang: selectedUser.preferedLang,
+      message: message,
+    };
+    socket.emit('send_message', data);
+    setMessages(prev=> [...prev, data]);
+  }
+  const onMessageRecived = async (data) => {
+    setMessages(prev=> [...prev, data.message]);
+    console.log('recived message:', data.message);
+    console.log(ctx.user._id);
+    const inContact = ctx.user.contacts.find(contact=> contact._id === data.message.sender);
+    if(!inContact) {
+      const res = await instance.post('/chat/addcontact', 
+        {id: ctx.user._id, contactId: data.message.sender}
+      );
+    }
+  }
+  const contactSelectHandler = async (contact) => {
+    setSelectedUser(contact);
+    const res = await instance.get(`/chat/getmessages?fromId=${contact._id}`);
+    if (res.status === 200){
+      setMessages(res.data);
+    }
+  }
   const logoutHandler = () => {
     localStorage.removeItem('accessToken');
+    socket.emit('unregister', {id: ctx.user._id});
+    socket.close();
     navigate('/');
   }
   const fetchUser = async () => {
@@ -19,15 +56,22 @@ function Chat() {
         const response = await instance.get('/account/getprofile');
         if(response.status == 200){
           ctx.setUser(response.data.user[0]);
-          console.log(response.data.user[0]);
+          socket.connect();
+          socket.emit('register',{id: response.data.user[0]._id});
         }
       } catch(err) {
         console.log(err.response)
       }
     }
   }
+
   useEffect(()=>{
     fetchUser();
+    socket.on('recive', onMessageRecived);
+
+    return()=> {
+      socket.off('recive', onMessageRecived);
+    }
   },[]);
 
   if (ctx.user){
@@ -39,7 +83,7 @@ function Chat() {
           <ContactsListContainer>
             {
               ctx.user.contacts.map(contact => (
-                <ContactItem onClick={()=> setSelectedUser(contact)}>
+                <ContactItem key={contact._id} onClick={()=> contactSelectHandler(contact)}>
                   <div style={{display: 'flex', alignItems: 'center'}}>
                   <ContactAvatar src={contact.profilePic} alt={contact.firstName} />
                   <ContactName>{contact.firstName} {contact.lastName}</ContactName>
@@ -61,15 +105,28 @@ function Chat() {
                 <h5 style={{padding: '.5rem'}}>Talkverse</h5>
               )
             }
+            <button onClick={logoutHandler}>LogOut</button>
           </Header>
           <ChatArea>
             {
               selectedUser ? (
                 <>
-                <h3>
-                  {selectedUser.firstName}
-                </h3>
-                <MessageBox />
+                { messages.length == 0 ? (
+                  <h5>No messages yet</h5>
+                 ) : (
+                  messages.map(message => (
+                    <ChatBubble key={message._id} isMine={message.sender === ctx.user._id}>
+                      {message.message}
+                      {message.translatedMsg && (
+                        <div style={{border: '1px solid #cfcfcf', padding: '1rem', borderRadius: '5px'}}>
+                          {message.translatedMsg}
+                        </div>
+                      ) }
+                    </ChatBubble>
+                  ))
+                 )
+                }
+                <MessageBox sendMessage={sendMessage}/>
                 </>
               ) : (
                 <h3 style={{margin: 'auto 0', textAlign: 'center'}}>Select contact to chat </h3>
@@ -133,6 +190,8 @@ const ChatArea = styled.div`
   padding: .5rem;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow-y: auto;
 `;
 const Avatar = styled.img`
   height: 48px;

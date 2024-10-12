@@ -4,6 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { userContext } from "../../state/UserContext";
 import instance from '../../utils/axinstance';
 import { useNavigate } from 'react-router-dom';
+import { socket } from "../../utils/socket";
 
 function Login({ changeForm }) {
   const user = useContext(userContext);
@@ -75,7 +76,6 @@ function Login({ changeForm }) {
       try {
         const response = await instance.post('/account/login', data);
         if (response.status == 200){
-          console.log(response.data);
           setLoading(false);
           if(!response.data.user) {
             navigate('/setup', {state: response.data.accId});
@@ -83,9 +83,12 @@ function Login({ changeForm }) {
           }
           user.setUser(response.data.user[0]);
           localStorage.setItem('accessToken', response.data.token);
+          socket.connect();
+          socket.emit('register', {id: response.data.user[0]._id});
           navigate('/chat');
         }
       } catch(err) {
+        console.log('errrrrr', err)
         setLoading(false);
         toast.error('Login failed. Wrong username/email or password', {
           position: "bottom-right",
