@@ -43,8 +43,6 @@ export const userLogin = async (req, res) => {
         process.env.JWT_SECRET,
         { expiresIn: '24h'}
       );
-      //get and send user profile too
-      //const profile = await Profile.findOne({_id: user.profile});
       const profile = await Profile.aggregate([
         {$match: {_id: user.profile}},
         {$lookup: {
@@ -54,7 +52,6 @@ export const userLogin = async (req, res) => {
           as: "contacts"
         }}
       ]);
-      console.log(profile);
       return res.status(200).json({ user: profile, accId: user._id, token });
     } else{
       return res.status(401).json({error: 'username or password wrong'});
@@ -84,14 +81,4 @@ export const getProfile = async (req, res) => {
   }
 }
 
-export const AddContact = async (req, res) => {
-  const {id, contactId} = req.body;
-  const result = await Profile.updateOne(
-    {_id: id},
-    {$push: {contacts: contactId}},
-  );
-
-  const user = await Profile.findOne({_id: id});
-  res.json(user);
-};
 

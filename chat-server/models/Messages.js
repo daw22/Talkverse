@@ -15,7 +15,7 @@ const messagesSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  reciverlang: {
+  reciverLang: {
     type: String,
     required: true,
   },
