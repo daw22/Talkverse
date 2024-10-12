@@ -3,6 +3,7 @@ import { userContext } from '../state/UserContext';
 import styled from 'styled-components';
 import instance from '../utils/axinstance';
 import { useNavigate } from 'react-router-dom';
+import MessageBox from '../components/MessageBox';
 
 function Chat() {
   const ctx = useContext(userContext);
@@ -50,19 +51,31 @@ function Chat() {
         </LeftPanel>
         <RightPanel>
           <Header>
-            <h5>user</h5>
-            <h5>settings</h5>
-            <button onClick={logoutHandler}>logout</button>
+            {
+              selectedUser ? (
+                <div style={{display: 'flex', alignItems: 'center'}}>
+                  <ContactAvatar src={selectedUser.profilePic}/>
+                  <ContactName>{selectedUser.firstName} {selectedUser.lastName}</ContactName>
+                </div>
+              ): (
+                <h5 style={{padding: '.5rem'}}>Talkverse</h5>
+              )
+            }
           </Header>
-          {
-            selectedUser ? (
-              <h3>
-                {selectedUser.firstName}
-              </h3>
-            ) : (
-              <h3 style={{width: '100%', height: '100%', background:'red'}}>Select contact to chat </h3>
-            )
-          }
+          <ChatArea>
+            {
+              selectedUser ? (
+                <>
+                <h3>
+                  {selectedUser.firstName}
+                </h3>
+                <MessageBox />
+                </>
+              ) : (
+                <h3 style={{margin: 'auto 0', textAlign: 'center'}}>Select contact to chat </h3>
+              )
+            }
+          </ChatArea>
         </RightPanel>
       </Container>
     )
@@ -112,9 +125,15 @@ const Header = styled.div`
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 0 20px 0 #cfcfcf;
-  margin-bottom: 1rem;
 `;
 
+const ChatArea = styled.div`
+  width: 100%;
+  height: 100%;
+  padding: .5rem;
+  display: flex;
+  flex-direction: column;
+`;
 const Avatar = styled.img`
   height: 48px;
   width: 48px;
