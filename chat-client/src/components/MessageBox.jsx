@@ -1,22 +1,25 @@
-import React from 'react'
+import { useState } from 'react'
 import styled from 'styled-components';
 
-function MessageBox() {
+function MessageBox({sendMessage }) {
+  const [message, setMessage] = useState('');
   return (
     <Container>
-      <Input />
-      <Button>Send</Button>
+      <Input onChange={(e)=> setMessage(e.target.value)}/>
+      <Button onClick={()=> sendMessage(message)}>Send</Button>
     </Container>
   )
 }
 
 const Container = styled.div`
-  width: 100%;
   margin-top: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  align-self: flex-end;
+  position: sticky;
+  left: 0;
+  right: 0;
+  bottom: 0;
 `;
 const Input = styled.input`
   width: 85%;
