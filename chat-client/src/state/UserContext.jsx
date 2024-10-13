@@ -5,8 +5,9 @@ export const userContext = createContext();
 
 const UserContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [onlineContacts, setOnlineContacts] = useState([]);
   return (
-    <userContext.Provider value={{ user, setUser }}>
+    <userContext.Provider value={{ user, setUser, onlineContacts, setOnlineContacts }}>
       {children}
     </userContext.Provider>
   );
