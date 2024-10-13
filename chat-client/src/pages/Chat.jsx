@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from 'react'
+import { useState, useContext, useEffect, useRef } from 'react'
 import { userContext } from '../state/UserContext';
 import styled from 'styled-components';
 import instance from '../utils/axinstance';
@@ -12,8 +12,9 @@ function Chat() {
   const navigate = useNavigate();
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
+  const autoScrollDiv = useRef(null);
 
-  const sendMessage = (message) => {
+  const sendMessage = (message, setMessage) => {
     if (!message || message === '') return;
     if(!ctx.user) return;
     const data = {
@@ -25,16 +26,32 @@ function Chat() {
     };
     socket.emit('send_message', data);
     setMessages(prev=> [...prev, data]);
+    setMessage('');
   }
   const onMessageRecived = async (data) => {
     setMessages(prev=> [...prev, data.message]);
-    console.log('recived message:', data.message);
-    console.log(ctx.user._id);
     const inContact = ctx.user.contacts.find(contact=> contact._id === data.message.sender);
+    console.log(inContact);
     if(!inContact) {
       const res = await instance.post('/chat/addcontact', 
         {id: ctx.user._id, contactId: data.message.sender}
       );
+    }
+  }
+  const onContactLeaves = (data) => {
+    const offlineId = data.userId;
+    console.log(offlineId, "leaves");
+    let onlineContacts = ctx.onlineContacts;
+    if (onlineContacts) {
+      onlineContacts = onlineContacts.filter((contact) => contact !== offlineId);
+      ctx.setOnlineContacts(onlineContacts);
+    }
+  }
+  const onContactJoins = (data) => {
+    const joinedId = data.userId;
+    console.log(joinedId, "joins");
+    if(ctx.onlineContacts){
+      ctx.setOnlineContacts((prev) => [...prev, joinedId]);
     }
   }
   const contactSelectHandler = async (contact) => {
@@ -56,6 +73,7 @@ function Chat() {
         const response = await instance.get('/account/getprofile');
         if(response.status == 200){
           ctx.setUser(response.data.user[0]);
+          ctx.setOnlineContacts(response.data.onlineContacts);
           socket.connect();
           socket.emit('register',{id: response.data.user[0]._id});
         }
@@ -68,11 +86,20 @@ function Chat() {
   useEffect(()=>{
     fetchUser();
     socket.on('recive', onMessageRecived);
-
+    socket.on('contact_leaves', onContactLeaves);
+    socket.on('contact_joins', onContactJoins);
     return()=> {
       socket.off('recive', onMessageRecived);
+      socket.off('contact_leaves', onContactLeaves);
+      socket.off('contact_joins', onContactJoins);
     }
   },[]);
+
+  useEffect(()=>{
+    if(autoScrollDiv.current){
+      autoScrollDiv.current.scrollIntoView();
+    }
+  },[messages]);
 
   if (ctx.user){
     return (
@@ -85,9 +112,10 @@ function Chat() {
               ctx.user.contacts.map(contact => (
                 <ContactItem key={contact._id} onClick={()=> contactSelectHandler(contact)}>
                   <div style={{display: 'flex', alignItems: 'center'}}>
-                  <ContactAvatar src={contact.profilePic} alt={contact.firstName} />
-                  <ContactName>{contact.firstName} {contact.lastName}</ContactName>
+                    <ContactAvatar src={contact.profilePic} alt={contact.firstName} />
+                    <ContactName>{contact.firstName} {contact.lastName}</ContactName>
                   </div>
+                  <StatusDot isonline={ctx.onlineContacts.includes(contact._id)}/>
                 </ContactItem>
               ))
             }
@@ -105,7 +133,11 @@ function Chat() {
                 <h5 style={{padding: '.5rem'}}>Talkverse</h5>
               )
             }
-            <button onClick={logoutHandler}>LogOut</button>
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-around', width: '30%'}}>
+              <Icon src='/search.svg' />
+              <Icon src='/settings.svg' />
+              <Icon src='/logout.svg' className='icons' onClick={logoutHandler}/>
+            </div>
           </Header>
           <ChatArea>
             {
@@ -115,7 +147,7 @@ function Chat() {
                   <h5>No messages yet</h5>
                  ) : (
                   messages.map(message => (
-                    <ChatBubble key={message._id} isMine={message.sender === ctx.user._id}>
+                    <ChatBubble key={message._id} ismine={message.sender === ctx.user._id}>
                       {message.message}
                       {message.translatedMsg && (
                         <div style={{border: '1px solid #cfcfcf', padding: '1rem', borderRadius: '5px'}}>
@@ -132,6 +164,7 @@ function Chat() {
                 <h3 style={{margin: 'auto 0', textAlign: 'center'}}>Select contact to chat </h3>
               )
             }
+            <div ref={autoScrollDiv}></div>
           </ChatArea>
         </RightPanel>
       </Container>
@@ -227,6 +260,17 @@ const ContactItem = styled.div`
   border-radius: 3px;
   margin: .5rem 0;
   box-shadow: 0 0 20px 0 #cfcfcf;
+  cursor: pointer;
+  &:hover {
+  box-shadow: none;
+  }
+`;
+
+const StatusDot = styled.div`
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+  background: ${({isonline}) => isonline ? 'green' : 'red'}
 `;
 
 const ContactAvatar = styled.img`
@@ -241,5 +285,9 @@ const ContactName = styled.h3`
   font-size: 1rem;
   font-weight: 200;
 `;
+
+const Icon = styled.img`
+  cursor: pointer;
+`
 
 export default Chat;

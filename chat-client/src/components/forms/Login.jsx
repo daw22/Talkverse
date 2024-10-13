@@ -82,6 +82,8 @@ function Login({ changeForm }) {
             return;
           }
           user.setUser(response.data.user[0]);
+          console.log(response.data.onlineContacts);
+          user.setOnlineContacts(response.data.onlineContacts);
           localStorage.setItem('accessToken', response.data.token);
           socket.connect();
           socket.emit('register', {id: response.data.user[0]._id});
