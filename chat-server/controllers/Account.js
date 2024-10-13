@@ -2,6 +2,7 @@ import Account from "../models/Account.js";
 import jwt from "jsonwebtoken";
 import crypto from 'crypto';
 import Profile from "../models/Profile.js";
+import { createClient } from "redis";
 
 const verifyPassword = (password, user) => {
   const hashedPassword = crypto
@@ -52,11 +53,23 @@ export const userLogin = async (req, res) => {
           as: "contacts"
         }}
       ]);
-      return res.status(200).json({ user: profile, accId: user._id, token });
+      const contactIds = [];
+      profile[0].contacts.forEach((contact)=> {
+        contactIds.push(contact._id.toString());
+      });
+      const rClient = createClient();
+      await rClient.connect();
+      const onlineContactsVals = await rClient.mGet(contactIds);
+      const onlineContacts = [];
+      onlineContactsVals.forEach((val, index) => {
+        if (val) onlineContacts.push(contactIds[index]);
+      })
+      return res.status(200).json({ user: profile, accId: user._id, token, onlineContacts });
     } else{
       return res.status(401).json({error: 'username or password wrong'});
     }
   }catch(err) {
+    console.log(err.message);
     return res.status(500).json({error: 'username or password wrong'});
   }
 }
@@ -75,9 +88,21 @@ export const getProfile = async (req, res) => {
         as: "contacts"
       }}
     ]);
-    res.status(200).json({ user: profile});
+    const contactIds = [];
+    profile[0].contacts.forEach((contact)=> {
+      contactIds.push(contact._id.toString());
+    });
+    const rClient = createClient();
+    await rClient.connect();
+    const onlineContactsVals = await rClient.mGet(contactIds);
+    const onlineContacts = [];
+    onlineContactsVals.forEach((val, index) => {
+      if (val) onlineContacts.push(contactIds[index]);
+    })
+    res.status(200).json({ user: profile, onlineContacts});
   } catch(err) {
     res.status(401).json({error: 'unauthorized user'});
+    console.log(err);
   }
 }
 

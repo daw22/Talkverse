@@ -10,7 +10,7 @@ import './utils/passport-config.js';
 import profileRouter from './routes/profile.js';
 import chatRouter from './routes/chat.js';
 import { createClient } from 'redis';
-import { sendMessage } from './controllers/socket.js';
+import { sendMessage, logout, login } from './controllers/socket.js';
 
 dotenv.config();
 const app = express();
@@ -38,8 +38,8 @@ app.use('/chat', passport.authorize('jwt', {session: false}), chatRouter);
 io.on('connection', (socket) => {
   console.log(`user ${socket.id} connected`);
   socket.on('disconnect', () => console.log(`user ${socket.id}: disconnected`));
-  socket.on('register', (data)=> {redisClient.set(data.id, socket.id); console.log(data.id)});
-  socket.on('unregister', (data) => redisClient.del(data.id));
+  socket.on('register', (data)=> login(data.id, socket, redisClient));
+  socket.on('unregister', (data) => logout(data.id, socket, redisClient));
   socket.on('send_message', (data)=> sendMessage(data, socket));
 });
 

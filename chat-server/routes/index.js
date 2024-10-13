@@ -11,6 +11,6 @@ accountRoute.post('/login', userLogin);
 
 accountRoute.post('/createprofile', createProfile);
 
-accountRoute.get('/getprofile', passport.authenticate('jwt', {session: false}), getProfile)
+accountRoute.get('/getprofile', passport.authenticate('jwt', {session: false}), getProfile);
 
 export default accountRoute;

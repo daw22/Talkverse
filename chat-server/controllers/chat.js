@@ -23,7 +23,11 @@ export const getMessages = async (req, res) => {
   }
   try {
     const messages = await Message.find({reciver: req.account.profile, sender: fromId});
-    res.status(200).json(messages);
+    const messages2 = await Message.find({sender: req.account.profile, reciver: fromId});
+    const allMessages = [...messages, ...messages2 ].sort((a, b)=>{
+      return new Date(a.createdAt) - new Date(b.createdAt);
+    })
+    res.status(200).json(allMessages);
   } catch(err){
     return res.status(404).json({error: err});
   }
