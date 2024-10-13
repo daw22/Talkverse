@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import styled from 'styled-components';
 
-function MessageBox({sendMessage }) {
+function MessageBox({ sendMessage }) {
   const [message, setMessage] = useState('');
   return (
     <Container>
-      <Input onChange={(e)=> setMessage(e.target.value)}/>
-      <Button onClick={()=> sendMessage(message)}>Send</Button>
+      <Input onChange={(e)=> setMessage(e.target.value)} value={message}/>
+      <Button onClick={()=> sendMessage(message, setMessage)}>Send</Button>
     </Container>
   )
 }
@@ -21,8 +21,10 @@ const Container = styled.div`
   right: 0;
   bottom: 0;
 `;
-const Input = styled.input`
+const Input = styled.textarea`
   width: 85%;
+  height: 3rem;
+  resize: none;
   border-radius: 5px;
   outline: none;
   border: none;
