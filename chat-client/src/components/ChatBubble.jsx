@@ -19,7 +19,7 @@ const Bubble = styled.div`
   align-self: ${({ismine})=> ismine ? 'end' : 'start'};
   padding: 1rem;
   border-radius: ${({ismine})=> ismine ? '10px 10px 0 10px' : '10px 10px 10px 0'};
-  box-shadow: 2px 10px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 2px 5px rgba(0, 0, 0, 0.2);
   height: auto;
   `;
 
