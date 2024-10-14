@@ -12,7 +12,7 @@ export const createProfile = async (req, res) => {
    let count = "";
    if (country) {
     const splited = country.split(' ');
-    count = splited[1];
+    count = country.split(' ').slice(1).join(' ');
     flag = splited[0];
    }
    const newProfile = new Profile(
