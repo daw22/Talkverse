@@ -7,6 +7,7 @@ import MessageBox from '../components/MessageBox';
 import ChatBubble from '../components/ChatBubble';
 import Modal from '../components/Modal';
 import SearchBox from '../components/SearchBox';
+import UpdateProfile from '../components/UpdateProfile';
 import { socket } from '../utils/socket';
 import { toast, ToastContainer } from 'react-toastify';
 
@@ -121,13 +122,13 @@ function Chat() {
             modalContent === 'search' ? (
               <SearchBox />
             ) : (
-              <h1>settings</h1>
+              <UpdateProfile profile={ctx.user} closeModal={setIsModalOpen}/>
             )
           }
           <ToastContainer />
         </Modal>
         <LeftPanel>
-          <Avatar src={ctx.user.profilePic} alt='profile pic'/>
+          <Avatar src={ctx.user.profilePic || '/tvlogo.png'} alt='profile pic'/>
           <Name>{ctx.user.firstName} {ctx.user.lastName} {ctx.user.flag}</Name>
           <ContactsListContainer>
             {

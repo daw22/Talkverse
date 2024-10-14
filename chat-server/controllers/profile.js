@@ -39,7 +39,7 @@ export const createProfile = async (req, res) => {
 }
 
 export const updateProfile = async (req, res) => {
-  let {firstName, lastName, preferedLang, bio, country} = req.body;
+  let {firstName, lastName, language, bio, country} = req.body;
   let flag = "";
   if (country) {
     flag = country.split(' ')[0];
@@ -53,16 +53,16 @@ export const updateProfile = async (req, res) => {
     data.country = country;
   }
   if(bio) data.bio = bio;
-  if(preferedLang) data.preferedLang = preferedLang;
+  if(language) data.preferedLang = language;
   try{
     await Profile.updateOne(
-      {_id: req.account.profile},
+      {_id: req.user.profile},
       data
     );
-    const newProfile = await Profile.findOne({_id: req.account.profile});
+    const newProfile = await Profile.findOne({_id: req.user.profile});
     res.status(201).json(newProfile);
   }catch(err){
-    console.log(err.message);
+    console.log(err);
     res.status(500).json({error: 'failed to update profile'});
   }
 }
