@@ -5,15 +5,25 @@ import instance from '../utils/axinstance';
 import { useNavigate } from 'react-router-dom';
 import MessageBox from '../components/MessageBox';
 import ChatBubble from '../components/ChatBubble';
+import Modal from '../components/Modal';
+import SearchBox from '../components/SearchBox';
 import { socket } from '../utils/socket';
+import { toast, ToastContainer } from 'react-toastify';
 
 function Chat() {
   const ctx = useContext(userContext);
   const navigate = useNavigate();
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [messagesPlaceHolder, setMessagesPlaceHolder] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState('');
   const autoScrollDiv = useRef(null);
 
+  const toggleModal = (content) => {
+    setIsModalOpen(!isModalOpen);
+    setModalContent(content);
+  }
   const sendMessage = (message, setMessage) => {
     if (!message || message === '') return;
     if(!ctx.user) return;
@@ -56,8 +66,10 @@ function Chat() {
   }
   const contactSelectHandler = async (contact) => {
     setSelectedUser(contact);
+    setMessagesPlaceHolder("loading...")
     const res = await instance.get(`/chat/getmessages?fromId=${contact._id}`);
     if (res.status === 200){
+      if(res.data.length === 0) setMessagesPlaceHolder('No messages yet');
       setMessages(res.data);
     }
   }
@@ -104,6 +116,16 @@ function Chat() {
   if (ctx.user){
     return (
       <Container>
+        <Modal isopen={isModalOpen} setIsModalOpen={setIsModalOpen}>
+          {
+            modalContent === 'search' ? (
+              <SearchBox />
+            ) : (
+              <h1>settings</h1>
+            )
+          }
+          <ToastContainer />
+        </Modal>
         <LeftPanel>
           <Avatar src={ctx.user.profilePic} alt='profile pic'/>
           <Name>{ctx.user.firstName} {ctx.user.lastName} {ctx.user.flag}</Name>
@@ -134,8 +156,8 @@ function Chat() {
               )
             }
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-around', width: '30%'}}>
-              <Icon src='/search.svg' />
-              <Icon src='/settings.svg' />
+              <Icon src='/search.svg' onClick={()=>toggleModal('search')}/>
+              <Icon src='/settings.svg' onClick={()=>toggleModal('settings')}/>
               <Icon src='/logout.svg' className='icons' onClick={logoutHandler}/>
             </div>
           </Header>
@@ -144,7 +166,9 @@ function Chat() {
               selectedUser ? (
                 <>
                 { messages.length == 0 ? (
-                  <h5>No messages yet</h5>
+                  <h5 style={{textAlign: 'center', margin: 'auto 0'}}>
+                    {messagesPlaceHolder}
+                  </h5>
                  ) : (
                   messages.map(message => (
                     <ChatBubble key={message._id} ismine={message.sender === ctx.user._id}>

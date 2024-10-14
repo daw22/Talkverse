@@ -1,5 +1,5 @@
 import Account from "./pages/Account";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
 import UserContextProvider from "./state/UserContext";
 import "./index.css";
 import "react-toastify/dist/ReactToastify.min.css";
@@ -12,7 +12,7 @@ function App() {
     <UserContextProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Account />} />
+          <Route path="/" element={<Account />}/>
           <Route path="/setup" element={<AccountSetup />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/chat" element={<Chat />} />

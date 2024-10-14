@@ -1,11 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { styled } from "styled-components";
 import Login from "../components/forms/Login";
 import Register from "../components/forms/Register";
+import { useNavigate } from "react-router-dom";
 
 function Account() {
   const [form, setForm] = useState("login");
   const swapForm = () => setForm(form === "login" ? "register" : "login");
+  const navigate = useNavigate();
+  
+  useEffect(()=>{
+    if (localStorage.accessToken) navigate('/chat');
+  },[])
   return (
     <Container>
       <CoverImage />
