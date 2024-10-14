@@ -25,7 +25,12 @@ const userProfileSchema = new mongoose.Schema({
     type: String,
     default: 'en',
   },
+  bio: {
+    type: String,
+    defalt: 'bio'
+  },
   contacts: [{ type: mongoose.Types.ObjectId, ref: 'Profile'}],
+  unreadMessages: [{type: mongoose.Types.ObjectId, ref: 'Message'}]
 });
 
 userProfileSchema.set('timestamps', true);
