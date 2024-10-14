@@ -25,16 +25,20 @@ export const login = async (id, socket, rClient) => {
   const profile = await Profile.findOne({_id: id});
   if (!profile) return;
   const contacts = profile.contacts.map((contact) => contact.toString());
-  const socketIds = await rClient.mGet(contacts);
-  socketIds.forEach((sId) => socket.to(sId).emit('contact_joins', {userId: id}));
-  rClient.set(id, socket.id);
+  if(contacts.length > 0) {
+    const socketIds = await rClient.mGet(contacts);
+    socketIds.forEach((sId) => socket.to(sId).emit('contact_joins', {userId: id}));
+  }
+    rClient.set(id, socket.id);
 }
 
 export const logout = async (id, socket, rclient) => {
   const profile = await Profile.findOne({_id: id});
   if (!profile) return;
   const contacts = profile.contacts.map((contact) => contact.toString());
-  const socketIds = await rclient.mGet(contacts);
-  socketIds.forEach((sId) => socket.to(sId).emit('contact_leaves', {userId: id}));
+  if(contacts.length > 0) {
+    const socketIds = await rclient.mGet(contacts);
+    socketIds.forEach((sId) => socket.to(sId).emit('contact_leaves', {userId: id}));
+  }
   rclient.del(id);
 }

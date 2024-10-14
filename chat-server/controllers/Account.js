@@ -57,19 +57,21 @@ export const userLogin = async (req, res) => {
       profile[0].contacts.forEach((contact)=> {
         contactIds.push(contact._id.toString());
       });
-      const rClient = createClient();
-      await rClient.connect();
-      const onlineContactsVals = await rClient.mGet(contactIds);
       const onlineContacts = [];
-      onlineContactsVals.forEach((val, index) => {
-        if (val) onlineContacts.push(contactIds[index]);
-      })
+      if(contactIds.length > 0){
+        const rClient = createClient();
+        await rClient.connect();
+        const onlineContactsVals = await rClient.mGet(contactIds);
+        onlineContactsVals.forEach((val, index) => {
+          if (val) onlineContacts.push(contactIds[index]);
+        });
+      }
       return res.status(200).json({ user: profile, accId: user._id, token, onlineContacts });
     } else{
       return res.status(401).json({error: 'username or password wrong'});
     }
   }catch(err) {
-    console.log(err.message);
+    console.log(err.message, "here");
     return res.status(500).json({error: 'username or password wrong'});
   }
 }
@@ -89,20 +91,22 @@ export const getProfile = async (req, res) => {
       }}
     ]);
     const contactIds = [];
+    const onlineContacts = [];
     profile[0].contacts.forEach((contact)=> {
       contactIds.push(contact._id.toString());
     });
-    const rClient = createClient();
-    await rClient.connect();
-    const onlineContactsVals = await rClient.mGet(contactIds);
-    const onlineContacts = [];
-    onlineContactsVals.forEach((val, index) => {
-      if (val) onlineContacts.push(contactIds[index]);
-    })
+    if(contactIds.length > 0){
+      const rClient = createClient();
+      await rClient.connect();
+      const onlineContactsVals = await rClient.mGet(contactIds);
+      onlineContactsVals.forEach((val, index) => {
+        if (val) onlineContacts.push(contactIds[index]);
+      })
+    }
     res.status(200).json({ user: profile, onlineContacts});
   } catch(err) {
     res.status(401).json({error: 'unauthorized user'});
-    console.log(err);
+    console.log(err.message, "getprofile");
   }
 }
 
