@@ -16,7 +16,7 @@ export const createProfile = async (req, res) => {
     flag = splited[0];
    }
    const newProfile = new Profile(
-    {firstName, lastName, country: count, flag, profilePic, preferedLang: language}
+    {firstName, lastName, country: count, flag, profilePic, preferedLang: language, bio}
   );
   try {
     const account = await Account.findOne({_id: id});
@@ -37,3 +37,33 @@ export const createProfile = async (req, res) => {
     res.status(500).json({error: 'something went wrong'});
   }
 }
+
+export const updateProfile = async (req, res) => {
+  let {firstName, lastName, preferedLang, bio, country} = req.body;
+  let flag = "";
+  if (country) {
+    flag = country.split(' ')[0];
+    country = country.split(' ').slice(1).join(' ');
+  }
+  const data = {};
+  if (firstName) data.firstName = firstName;
+  if (lastName) data.lastName = lastName;
+  if (country){
+    data.flag = flag;
+    data.country = country;
+  }
+  if(bio) data.bio = bio;
+  if(preferedLang) data.preferedLang = preferedLang;
+  try{
+    await Profile.updateOne(
+      {_id: req.account.profile},
+      data
+    );
+    const newProfile = await Profile.findOne({_id: req.account.profile});
+    res.status(201).json(newProfile);
+  }catch(err){
+    console.log(err.message);
+    res.status(500).json({error: 'failed to update profile'});
+  }
+}
+
