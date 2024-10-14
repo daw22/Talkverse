@@ -25,7 +25,7 @@ const CountrySelect = ({ formData, setFormData }) => {
 
 export default function App({ formData, setFormData }) {
   return (
-    <div style={{width: '40%'}} >
+    <div style={{width: '45%'}} >
       <CountrySelect formData={formData} setFormData={setFormData}/>
     </div>
   );

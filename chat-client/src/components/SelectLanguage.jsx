@@ -8,7 +8,7 @@ const LanguageSelect = ({ formData, setFormData }) => {
 
   useEffect(()=>{
     setLanguages(languagesList.languages);
-    setSelectedLanguage(languagesList.languages[0]);
+    setSelectedLanguage(languagesList.languages[32]);
   }, []);
 
   return (
@@ -25,7 +25,7 @@ const LanguageSelect = ({ formData, setFormData }) => {
 
 export default function App({ formData, setFormData }) {
   return (
-    <div style={{width: '40%'}}>
+    <div style={{width: '45%'}}>
       <LanguageSelect formData={formData} setFormData={setFormData}/>
     </div>
   );
