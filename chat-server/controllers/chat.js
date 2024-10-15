@@ -81,3 +81,31 @@ export const search = async (req, res) => {
     return res.status(500).json({error: "error searching"});
   }
 }
+
+export const getUnreadMessages = async (req, res) => {
+  const userId = req.account.profile;
+  try {
+    const profile = await Profile.findOne({_id: userId});
+    console.log(profile);
+    if (profile){
+      const unreadIds = profile.unreadMessages;
+      const messages = await Message.find({_id: {$in: unreadIds}}).populate('sender');
+      console.log(messages);
+      res.status(200).json(messages);
+    }
+  } catch (err){
+    console.log(err);
+  }
+}
+
+export const markReadmessages = async (req, res) => {
+  const userId = req.account.profile;
+  const { msgIds } = req.body;
+  try {
+    await Profile.updateOne({_id: userId}, {unreadMessages: msgIds});
+    res.status(200).end();
+  }catch(err){
+    console.log(err);
+    res.status(500).end();
+  }
+}

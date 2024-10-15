@@ -15,7 +15,11 @@ export const sendMessage = async (data, socket) => {
     const redisClient = createClient();
     await redisClient.connect();
     const re = await redisClient.get(reciver);
-    socket.to(re).emit('recive', {message: savedMessage});
+    if(re){
+      socket.to(re).emit('recive', {message: savedMessage});
+    } else {
+      await Profile.updateOne({_id: reciver}, {$push: {unreadMessages: savedMessage._id}});
+    }
   } catch(err){
     console.log(err);
   }
