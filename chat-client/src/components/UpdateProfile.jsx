@@ -20,7 +20,7 @@ function UpdateProfile({ profile, closeModal }) {
     if (res.status == 201){
       ctx.setUser(res.data);
     }
-    closeModal(false);
+    closeModal('false');
   }
   return (
     <Container onClick={(e) => e.stopPropagation()}>

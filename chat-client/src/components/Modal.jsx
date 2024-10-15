@@ -2,14 +2,14 @@ import styled from "styled-components";
 
 function Modal({ children, isopen, setIsModalOpen }) {
   return (
-    <Container isopen={isopen} onClick={()=>setIsModalOpen(false)}>
+    <Container isopen={isopen} onClick={()=>setIsModalOpen("false")}>
       {children}
     </Container>
   )
 }
 
 const Container = styled.div`
-  display: ${({isopen}) => isopen ? 'flex' : 'none'};
+  display: ${({isopen}) => isopen == 'true' ? 'flex' : 'none'};
   align-items: start;
   justify-content: center;
   position: fixed;

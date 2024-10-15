@@ -3,11 +3,13 @@ import { userContext } from '../state/UserContext';
 import styled from 'styled-components';
 import instance from '../utils/axinstance';
 import { useNavigate } from 'react-router-dom';
+import MessagesBox from '../components/MessagesBox';
 import MessageBox from '../components/MessageBox';
 import ChatBubble from '../components/ChatBubble';
 import Modal from '../components/Modal';
 import SearchBox from '../components/SearchBox';
 import UpdateProfile from '../components/UpdateProfile';
+import NotificationIcon from '../components/NotificationIcon';
 import { socket } from '../utils/socket';
 import { toast, ToastContainer } from 'react-toastify';
 
@@ -17,13 +19,14 @@ function Chat() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messagesPlaceHolder, setMessagesPlaceHolder] = useState("")
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState("false");
   const [modalContent, setModalContent] = useState('');
   const autoScrollDiv = useRef(null);
 
   const toggleModal = (content) => {
-    setIsModalOpen(!isModalOpen);
+    setIsModalOpen(isModalOpen == 'true' ? 'false' : 'true');
     setModalContent(content);
+    console.log(content)
   }
   const sendMessage = (message, setMessage) => {
     if (!message || message === '') return;
@@ -42,16 +45,23 @@ function Chat() {
   const onMessageRecived = async (data) => {
     setMessages(prev=> [...prev, data.message]);
     const inContact = ctx.user.contacts.find(contact=> contact._id === data.message.sender);
-    console.log(inContact);
     if(!inContact) {
       const res = await instance.post('/chat/addcontact', 
         {id: ctx.user._id, contactId: data.message.sender}
       );
     }
+    if(!selectedUser || selectedUser._id !== data.message.sender){
+      toast.success(`new message from ${inContact.firstName}`, {
+        position: 'bottom-right',
+        draggable: true,
+        autoClose: 3000,
+        pauseOnHover: true,
+        progress: false,
+      })
+    }
   }
   const onContactLeaves = (data) => {
     const offlineId = data.userId;
-    console.log(offlineId, "leaves");
     let onlineContacts = ctx.onlineContacts;
     if (onlineContacts) {
       onlineContacts = onlineContacts.filter((contact) => contact !== offlineId);
@@ -98,6 +108,7 @@ function Chat() {
 
   useEffect(()=>{
     fetchUser();
+    console.log('reload', selectedUser);
     socket.on('recive', onMessageRecived);
     socket.on('contact_leaves', onContactLeaves);
     socket.on('contact_joins', onContactJoins);
@@ -121,11 +132,16 @@ function Chat() {
           {
             modalContent === 'search' ? (
               <SearchBox />
+            ) :
+            modalContent === 'messages' ? (
+              <MessagesBox 
+                modalOpen={isModalOpen}
+                setModalOpen={setIsModalOpen}
+                setSelectedUser={contactSelectHandler}/>
             ) : (
               <UpdateProfile profile={ctx.user} closeModal={setIsModalOpen}/>
             )
           }
-          <ToastContainer />
         </Modal>
         <LeftPanel>
           <Avatar src={ctx.user.profilePic || '/tvlogo.png'} alt='profile pic'/>
@@ -138,7 +154,7 @@ function Chat() {
                     <ContactAvatar src={contact.profilePic} alt={contact.firstName} />
                     <ContactName>{contact.firstName} {contact.lastName}</ContactName>
                   </div>
-                  <StatusDot isonline={ctx.onlineContacts.includes(contact._id)}/>
+                  <StatusDot isonline={ctx.onlineContacts.includes(contact._id)+""}/>
                 </ContactItem>
               ))
             }
@@ -157,6 +173,10 @@ function Chat() {
               )
             }
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-around', width: '30%'}}>
+              <NotificationIcon
+                number={ctx.user.unreadMessages.length} 
+                toggleModal={toggleModal}
+              />
               <Icon src='/search.svg' onClick={()=>toggleModal('search')}/>
               <Icon src='/settings.svg' onClick={()=>toggleModal('settings')}/>
               <Icon src='/logout.svg' className='icons' onClick={logoutHandler}/>
@@ -192,6 +212,7 @@ function Chat() {
             <div ref={autoScrollDiv}></div>
           </ChatArea>
         </RightPanel>
+        <ToastContainer />
       </Container>
     )
   } else {
@@ -295,7 +316,7 @@ const StatusDot = styled.div`
   width: .5rem;
   height: .5rem;
   border-radius: 50%;
-  background: ${({isonline}) => isonline ? 'green' : 'red'}
+  background: ${({isonline}) => isonline == 'true' ? 'green' : 'red'}
 `;
 
 const ContactAvatar = styled.img`
