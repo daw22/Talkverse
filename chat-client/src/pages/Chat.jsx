@@ -2,7 +2,7 @@ import { useState, useContext, useEffect, useRef } from 'react'
 import { userContext } from '../state/UserContext';
 import styled from 'styled-components';
 import instance from '../utils/axinstance';
-import { useNavigate } from 'react-router-dom';
+import { useAsyncError, useNavigate } from 'react-router-dom';
 import MessagesBox from '../components/MessagesBox';
 import MessageBox from '../components/MessageBox';
 import ChatBubble from '../components/ChatBubble';
@@ -11,13 +11,13 @@ import SearchBox from '../components/SearchBox';
 import UpdateProfile from '../components/UpdateProfile';
 import NotificationIcon from '../components/NotificationIcon';
 import { socket } from '../utils/socket';
-import { toast, ToastContainer } from 'react-toastify';
 
 function Chat() {
   const ctx = useContext(userContext);
   const navigate = useNavigate();
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [lastTranslation, setLastTranslation] = useState(null);
   const [messagesPlaceHolder, setMessagesPlaceHolder] = useState("")
   const [isModalOpen, setIsModalOpen] = useState("false");
   const [modalContent, setModalContent] = useState('');
@@ -43,22 +43,28 @@ function Chat() {
     setMessage('');
   }
   const onMessageRecived = async (data) => {
-    setMessages(prev=> [...prev, data.message]);
-    const inContact = ctx.user.contacts.find(contact=> contact._id === data.message.sender);
-    if(!inContact) {
-      const res = await instance.post('/chat/addcontact', 
-        {id: ctx.user._id, contactId: data.message.sender}
-      );
+    setMessages((prev)=> [...prev, data.message]);
+    console.log('recived message:', data.message);
+    if (ctx.user) {
+      const inContact = ctx.user.contacts.find(contact=> contact._id === data.message.sender);
+      if(!inContact) {
+        await instance.post('/chat/addcontact', 
+          {id: ctx.user._id, contactId: data.message.sender}
+        );
+      }
     }
-    if(!selectedUser || selectedUser._id !== data.message.sender){
-      toast.success(`new message from ${inContact.firstName}`, {
-        position: 'bottom-right',
-        draggable: true,
-        autoClose: 3000,
-        pauseOnHover: true,
-        progress: false,
-      })
-    }
+    
+    // if(!selectedUser || selectedUser._id !== data.message.sender){
+    //   let unrMsgs = ctx.user.unreadMessages;
+    //   if (unrMsgs) {
+    //     unrMsgs.push(data.message._id)
+    //   }
+    //   else {
+    //     unrMsgs = [data.messsage._id]
+    //   }
+    //   ctx.setUser({...ctx.user, unreadMessages: unrMsgs});
+    //   console.log('unread messages:', ctx.user.unreadMessages);
+    // }
   }
   const onContactLeaves = (data) => {
     const offlineId = data.userId;
@@ -75,13 +81,27 @@ function Chat() {
       ctx.setOnlineContacts((prev) => [...prev, joinedId]);
     }
   }
+  const onTranslationArival = async (data) => {
+    console.log('translation arived: ', data.translatedMsg);
+    setLastTranslation(data);
+    if(selectedUser) {
+      const res = await instance.get(`/chat/getmessages?fromId=${selectedUser._id}`);
+      if (res.status === 200){
+        setMessages(res.data);
+      }
+    }
+  }
   const contactSelectHandler = async (contact) => {
     setSelectedUser(contact);
     setMessagesPlaceHolder("loading...")
-    const res = await instance.get(`/chat/getmessages?fromId=${contact._id}`);
-    if (res.status === 200){
-      if(res.data.length === 0) setMessagesPlaceHolder('No messages yet');
-      setMessages(res.data);
+    try {
+      const res = await instance.get(`/chat/getmessages?fromId=${contact._id}`);
+      if (res.status === 200){
+        if(res.data.length === 0) setMessagesPlaceHolder('No messages yet');
+        setMessages(res.data);
+      }
+    } catch(err) {
+      console.log("error:", err.message);
     }
   }
   const logoutHandler = () => {
@@ -91,7 +111,7 @@ function Chat() {
     navigate('/');
   }
   const fetchUser = async () => {
-    if(!ctx.user){
+    console.log('fetch user called');
       try{
         const response = await instance.get('/account/getprofile');
         if(response.status == 200){
@@ -101,21 +121,21 @@ function Chat() {
           socket.emit('register',{id: response.data.user[0]._id});
         }
       } catch(err) {
-        console.log(err.response)
+        console.log(err)
       }
-    }
   }
 
   useEffect(()=>{
     fetchUser();
-    console.log('reload', selectedUser);
     socket.on('recive', onMessageRecived);
     socket.on('contact_leaves', onContactLeaves);
     socket.on('contact_joins', onContactJoins);
+    socket.on('translation', onTranslationArival);
     return()=> {
       socket.off('recive', onMessageRecived);
       socket.off('contact_leaves', onContactLeaves);
       socket.off('contact_joins', onContactJoins);
+      socket.off('translation', onTranslationArival);
     }
   },[]);
 
@@ -124,6 +144,10 @@ function Chat() {
       autoScrollDiv.current.scrollIntoView();
     }
   },[messages]);
+
+  useEffect(()=>{
+    console.log(lastTranslation);
+  },[lastTranslation]);
 
   if (ctx.user){
     return (
@@ -192,11 +216,21 @@ function Chat() {
                   </h5>
                  ) : (
                   messages.map(message => (
-                    <ChatBubble key={message._id} ismine={message.sender === ctx.user._id}>
+                    <ChatBubble 
+                      key={message._id} 
+                      ismine={message.sender === ctx.user._id ? "true" : "false"}>
                       {message.message}
-                      {message.translatedMsg && (
-                        <div style={{border: '1px solid #cfcfcf', padding: '1rem', borderRadius: '5px'}}>
-                          {message.translatedMsg}
+                      {message.translatedMsg && message.sender !== ctx.user._id && (
+                        <div 
+                          style={{
+                            marginTop: '5px',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <Icon src='/robot.svg'/>
+                          <span>{JSON.parse(message.translatedMsg).content}</span>
                         </div>
                       ) }
                     </ChatBubble>
@@ -212,7 +246,6 @@ function Chat() {
             <div ref={autoScrollDiv}></div>
           </ChatArea>
         </RightPanel>
-        <ToastContainer />
       </Container>
     )
   } else {
