@@ -1,8 +1,8 @@
 import Message from '../models/Messages.js';
 import Profile from '../models/Profile.js';
-import { createClient } from 'redis';
+import translate from '../utils/ai.js';
 
-export const sendMessage = async (data, socket) => {
+export const sendMessage = async (data, socket, redisClient) => {
   const { sender, reciver, senderLang, reciverLang, message } = data;
   if (!sender || !reciver || !message) {
     return;
@@ -12,13 +12,21 @@ export const sendMessage = async (data, socket) => {
       sender, reciver, senderLang, reciverLang, message
     });
     const savedMessage = await newMessage.save();
-    const redisClient = createClient();
-    await redisClient.connect();
     const re = await redisClient.get(reciver);
     if(re){
       socket.to(re).emit('recive', {message: savedMessage});
     } else {
       await Profile.updateOne({_id: reciver}, {$push: {unreadMessages: savedMessage._id}});
+    }
+    if (reciverLang !== senderLang) {
+      const translation = await translate(reciverLang, message);
+      if (translation) {
+        const result = translation.response.text();
+        if(re) {
+          socket.to(re).emit('translation', {messageId: savedMessage._id, translatedMsg: result});
+        }
+        await Message.updateOne({_id: savedMessage._id}, {translatedMsg: result});
+      }
     }
   } catch(err){
     console.log(err);

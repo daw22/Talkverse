@@ -38,7 +38,7 @@ app.use('/chat', passport.authorize('jwt', {session: false}), chatRouter);
 io.on('connection', (socket) => {
   socket.on('register', (data)=> login(data.id, socket, redisClient));
   socket.on('unregister', (data) => logout(data.id, socket, redisClient));
-  socket.on('send_message', (data)=> sendMessage(data, socket));
+  socket.on('send_message', (data)=> sendMessage(data, socket, redisClient));
 });
 
 
