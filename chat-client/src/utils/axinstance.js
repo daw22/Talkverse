@@ -1,21 +1,24 @@
-import axios from "axios";
+import axios from 'axios';
 
-const token = localStorage.getItem('accessToken');
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:5000', // Replace with your actual API base URL
+});
 
-let instance;
-if (token) {
-  instance = axios.create({
-    withCredentials: true,
-    baseURL: "http://localhost:5000",
-    headers: {
-      Authorization: `Bearer ${token}`
-    },
-  });
-} else {
-  instance = axios.create({
-    baseURL: "http://localhost:5000",
-  });
-}
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const accessToken = localStorage.getItem('accessToken');
 
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;  
 
-export default instance;
+      config.withCredentials = true; // Set credentials to true for authenticated requests
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+export default axiosInstance;

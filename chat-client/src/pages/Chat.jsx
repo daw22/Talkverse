@@ -105,7 +105,7 @@ function Chat() {
     }
   }
   const logoutHandler = () => {
-    localStorage.removeItem('accessToken');
+    localStorage.clear();
     socket.emit('unregister', {id: ctx.user._id});
     socket.close();
     navigate('/');
