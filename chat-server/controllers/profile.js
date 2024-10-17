@@ -59,7 +59,7 @@ export const updateProfile = async (req, res) => {
       {_id: req.user.profile},
       data
     );
-    const newProfile = await Profile.findOne({_id: req.user.profile});
+    const newProfile = await Profile.findOne({_id: req.user.profile}).populate("contacts");
     res.status(201).json(newProfile);
   }catch(err){
     console.log(err);

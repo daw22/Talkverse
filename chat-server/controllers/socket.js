@@ -19,13 +19,15 @@ export const sendMessage = async (data, socket, redisClient) => {
       await Profile.updateOne({_id: reciver}, {$push: {unreadMessages: savedMessage._id}});
     }
     if (reciverLang !== senderLang) {
-      const translation = await translate(reciverLang, message);
+      const translation = await translate(senderLang, reciverLang, message);
       if (translation) {
         const result = translation.response.text();
         if(re) {
-          socket.to(re).emit('translation', {messageId: savedMessage._id, translatedMsg: result});
+          socket.to(re).emit('translation', 
+            {messageId: savedMessage._id, translatedMsg: JSON.parse(result).content}
+          );
         }
-        await Message.updateOne({_id: savedMessage._id}, {translatedMsg: result});
+        await Message.updateOne({_id: savedMessage._id}, {translatedMsg: JSON.parse(result).content});
       }
     }
   } catch(err){

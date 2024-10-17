@@ -27,28 +27,27 @@ const safetySettings = [
 ];
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-pro-exp-0827",
+  model: "gemini-1.5-flash-002",
   safetySettings: safetySettings,
-  systemInstruction: "translate to the language given"
+  systemInstruction: "i want you translate messages for me word by word with out any alteration. i will send you a json like this '{\"from\":  'german', \"to\": \"english\", \"content\": \"the message\"}' after translating from geramn to english send me back a json with the format '{\"language\": \"english\", \"content\": \"translated language\"} ",
 });
 
 const generationConfig = {
-  temperature: 1,
+  temperature: 0,
   topP: 0.95,
-  topK: 64,
+  topK: 40,
   maxOutputTokens: 8192,
   responseMimeType: "application/json",
 };
 
-async function run(to, message) {
+async function run(from, to, message) {
   const chatSession = model.startChat({
     generationConfig,
     history: [
     ],
   });
-  console.log('translate to:', to);
   const result = await chatSession.sendMessage(
-    `{ language: ${to}, content: ${message}}`);
+    `{ from: ${from}, to: ${to}, content: ${message}}`);
   return result;
 }
 
