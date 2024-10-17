@@ -1,8 +1,8 @@
-import { useState, useContext, useEffect, useRef } from 'react'
+import { useState, useContext, useEffect, useRef, useCallback } from 'react'
 import { userContext } from '../state/UserContext';
 import styled from 'styled-components';
 import instance from '../utils/axinstance';
-import { useAsyncError, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import MessagesBox from '../components/MessagesBox';
 import MessageBox from '../components/MessageBox';
 import ChatBubble from '../components/ChatBubble';
@@ -17,7 +17,6 @@ function Chat() {
   const navigate = useNavigate();
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [lastTranslation, setLastTranslation] = useState(null);
   const [messagesPlaceHolder, setMessagesPlaceHolder] = useState("")
   const [isModalOpen, setIsModalOpen] = useState("false");
   const [modalContent, setModalContent] = useState('');
@@ -43,8 +42,9 @@ function Chat() {
     setMessage('');
   }
   const onMessageRecived = async (data) => {
-    setMessages((prev)=> [...prev, data.message]);
-    console.log('recived message:', data.message);
+    let arr = [...messages];
+    arr.push(data.message);
+    setMessages(arr);
     if (ctx.user) {
       const inContact = ctx.user.contacts.find(contact=> contact._id === data.message.sender);
       if(!inContact) {
@@ -53,18 +53,6 @@ function Chat() {
         );
       }
     }
-    
-    // if(!selectedUser || selectedUser._id !== data.message.sender){
-    //   let unrMsgs = ctx.user.unreadMessages;
-    //   if (unrMsgs) {
-    //     unrMsgs.push(data.message._id)
-    //   }
-    //   else {
-    //     unrMsgs = [data.messsage._id]
-    //   }
-    //   ctx.setUser({...ctx.user, unreadMessages: unrMsgs});
-    //   console.log('unread messages:', ctx.user.unreadMessages);
-    // }
   }
   const onContactLeaves = (data) => {
     const offlineId = data.userId;
@@ -82,14 +70,11 @@ function Chat() {
     }
   }
   const onTranslationArival = async (data) => {
-    console.log('translation arived: ', data.translatedMsg);
-    setLastTranslation(data);
-    if(selectedUser) {
-      const res = await instance.get(`/chat/getmessages?fromId=${selectedUser._id}`);
-      if (res.status === 200){
-        setMessages(res.data);
-      }
-    }
+   const newState = messages.map((msg)=> 
+    (msg._id === data.messageId ? {...msg, translatedMsg: data.translatedMsg} : msg)
+   );
+   console.log('new state:', newState);
+   setMessages(newState);
   }
   const contactSelectHandler = async (contact) => {
     setSelectedUser(contact);
@@ -127,6 +112,12 @@ function Chat() {
 
   useEffect(()=>{
     fetchUser();
+  },[]);
+
+  useEffect(()=>{
+    if(autoScrollDiv.current){
+      autoScrollDiv.current.scrollIntoView();
+    }
     socket.on('recive', onMessageRecived);
     socket.on('contact_leaves', onContactLeaves);
     socket.on('contact_joins', onContactJoins);
@@ -137,17 +128,7 @@ function Chat() {
       socket.off('contact_joins', onContactJoins);
       socket.off('translation', onTranslationArival);
     }
-  },[]);
-
-  useEffect(()=>{
-    if(autoScrollDiv.current){
-      autoScrollDiv.current.scrollIntoView();
-    }
   },[messages]);
-
-  useEffect(()=>{
-    console.log(lastTranslation);
-  },[lastTranslation]);
 
   if (ctx.user){
     return (
@@ -220,7 +201,7 @@ function Chat() {
                       key={message._id} 
                       ismine={message.sender === ctx.user._id ? "true" : "false"}>
                       {message.message}
-                      {message.translatedMsg && message.sender !== ctx.user._id && (
+                      {message.sender !== ctx.user._id && (
                         <div 
                           style={{
                             marginTop: '5px',
@@ -230,7 +211,11 @@ function Chat() {
                           }}
                         >
                           <Icon src='/robot.svg'/>
-                          <span>{JSON.parse(message.translatedMsg).content}</span>
+                          {message.translatedMsg ?
+                            (<span>{message.translatedMsg}</span>) :
+                            (<span>loading...</span>)
+                          }
+                          
                         </div>
                       ) }
                     </ChatBubble>
