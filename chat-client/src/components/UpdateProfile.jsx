@@ -19,6 +19,7 @@ function UpdateProfile({ profile, closeModal }) {
     const res = await instance.post('/profile/updateprofile', formData);
     if (res.status == 201){
       ctx.setUser(res.data);
+      console.log('new profile:', ctx.user);
     }
     closeModal('false');
   }

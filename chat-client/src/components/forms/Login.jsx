@@ -138,6 +138,7 @@ const Container = styled.div`
   border-radius: 5px;
   padding: 1rem 2rem;
   width: 30%;
+  @media(max-width: 768px){width: 60%};
   display: flex;
   flex-direction: column;
   align-items: center;
