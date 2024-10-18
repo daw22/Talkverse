@@ -21,7 +21,9 @@ const io = new Server(server, {
   }
 });
 //redis
-const redisClient = createClient();
+const redisClient = createClient({
+  url: 'redis://red-cs92i8bqf0us738i4ddg:6379'
+});
 //midlewares
 app.use(cors({
   origin: 'http://localhost:5173',
