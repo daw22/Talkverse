@@ -72,7 +72,7 @@ export const userLogin = async (req, res) => {
     }
   }catch(err) {
     console.log(err.message, "here");
-    return res.status(500).json({error: 'username or password wrong'});
+    return res.status(500).json({error: err});
   }
 }
 
