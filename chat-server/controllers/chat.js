@@ -14,6 +14,11 @@ export const addContact = async (req, res) => {
       {$push: {contacts: contactId}},
     );
   
+    await Profile.updateOne(
+      {_id: contactId},
+      {$push: {contacts: id}},
+    );
+
     const user = await Profile.findOne({_id: id}).populate("contacts");
     res.status(200).json(user);
   } catch(err) {
