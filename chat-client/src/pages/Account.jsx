@@ -34,9 +34,10 @@ const Container = styled.div`
 
 const CoverImage = styled.div`
   background-image: url("/cover.png");
-  background-size: cover;
+  background-size: 100% 100%;
   background-position: center;
-  height: 80%;
   width: 40%;
+  @media(max-width: 768px){display: none;}
+  padding-bottom: 40%;
 `;
 export default Account;
