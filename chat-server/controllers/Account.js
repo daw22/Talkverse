@@ -59,7 +59,9 @@ export const userLogin = async (req, res) => {
       });
       const onlineContacts = [];
       if(contactIds.length > 0){
-        const rClient = createClient();
+        const rClient = createClient({
+          url: 'redis://red-cs92i8bqf0us738i4ddg:6379'
+        });
         await rClient.connect();
         const onlineContactsVals = await rClient.mGet(contactIds);
         onlineContactsVals.forEach((val, index) => {
@@ -96,7 +98,9 @@ export const getProfile = async (req, res) => {
       contactIds.push(contact._id.toString());
     });
     if(contactIds.length > 0){
-      const rClient = createClient();
+      const rClient = createClient({
+        url: 'redis://red-cs92i8bqf0us738i4ddg:6379'
+      });
       await rClient.connect();
       const onlineContactsVals = await rClient.mGet(contactIds);
       onlineContactsVals.forEach((val, index) => {
