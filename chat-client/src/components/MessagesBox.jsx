@@ -64,6 +64,7 @@ function MessagesBox({ modalOpen, setModalOpen, setSelectedUser }) {
         !messages ? (
           <h3>loading...</h3>
         ): (
+          messages.length === 0 ? <h3>No Messages</h3> :
           messages.map((msg)=> (
             <MessageItem key={msg._id} onClick={()=> onMessageClicked(msg)}>
               <div style={{display: 'flex'}}>

@@ -1,6 +1,7 @@
 import Profile from "../models/Profile.js";
 import Account from "../models/Account.js"
 import Message from "../models/Messages.js";
+import { redisClient } from "../index.js";
 
 export const addContact = async (req, res) => {
   const {id, contactId} = req.body;
@@ -20,7 +21,8 @@ export const addContact = async (req, res) => {
     );
 
     const user = await Profile.findOne({_id: id}).populate("contacts");
-    res.status(200).json(user);
+    const newContactOnline = await redisClient.get(contactId.toString());
+    res.status(200).json({ user, newContactOnline: newContactOnline ? true : false});
   } catch(err) {
     res.status(404).json({error: err});
   }
