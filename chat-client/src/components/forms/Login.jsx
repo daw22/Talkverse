@@ -13,6 +13,7 @@ function Login({ changeForm }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const validateForm = (data) => {
+    console.log(data);
     if (data.email) {
       const emailRegx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const valid = emailRegx.test(data.email);
@@ -37,8 +38,8 @@ function Login({ changeForm }) {
         return false;
       }
     }
-    if (!user.email && !user.username) {
-      if (data.username.length < 3) {
+    if (!data.email && !data.username) {
+      //if (data.username.length < 3) {
         toast.error("username or email needed", {
           position: "bottom-right",
           draggable: true,
@@ -46,7 +47,7 @@ function Login({ changeForm }) {
           pauseOnHover: true,
         });
         return false;
-      }
+      //}
     }
     if (data.password || password === "") {
       const passwordRegex =
