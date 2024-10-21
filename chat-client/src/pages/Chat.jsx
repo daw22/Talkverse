@@ -17,7 +17,7 @@ function Chat() {
   const navigate = useNavigate();
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [messagesPlaceHolder, setMessagesPlaceHolder] = useState("")
+  const [messagesPlaceHolder, setMessagesPlaceHolder] = useState("");
   const [isModalOpen, setIsModalOpen] = useState("false");
   const [modalContent, setModalContent] = useState('');
   const autoScrollDiv = useRef(null);
@@ -45,13 +45,12 @@ function Chat() {
     let arr = [...messages];
     arr.push(data.message);
     setMessages(arr);
-    if (ctx.user) {
-      const inContact = ctx.user.contacts.find(contact=> contact._id === data.message.sender);
-      if(!inContact) {
-        await instance.post('/chat/addcontact', 
-          {id: ctx.user._id, contactId: data.message.sender}
-        );
-      }
+    console.log(selectedUser._id, data.message._id);
+    if (!selectedUser || selectedUser._id !== data.message.sender) {
+      let unreadMessages = ctx.user.unreadMessages;
+      unreadMessages.push(data.message._id);
+      ctx.setUser({...ctx.user, unreadMessages});
+      await instance.post('/chat/markreadmessages', {msgIds: unreadMessages});
     }
   }
   const onContactLeaves = (data) => {
@@ -63,6 +62,7 @@ function Chat() {
     }
   }
   const onContactJoins = (data) => {
+    console.log('joins:', data.userId);
     const joinedId = data.userId;
     console.log(joinedId, "joins");
     if(ctx.onlineContacts){
@@ -73,7 +73,6 @@ function Chat() {
    const newState = messages.map((msg)=> 
     (msg._id === data.messageId ? {...msg, translatedMsg: data.translatedMsg} : msg)
    );
-   console.log('new state:', newState);
    setMessages(newState);
   }
   const contactSelectHandler = async (contact) => {
@@ -84,6 +83,14 @@ function Chat() {
       if (res.status === 200){
         if(res.data.length === 0) setMessagesPlaceHolder('No messages yet');
         setMessages(res.data);
+        // remove messages from this user form unread messages list
+        const unreadMsgs = await instance.get('/chat/getunreadmessages');
+        if (unreadMsgs.status === 200) {
+          const newList = unreadMsgs.data.filter(unMsgs => unMsgs.sender._id !== contact._id);
+          const idsToSave = newList.map(msg=> msg._id);
+          ctx.setUser({...ctx.user, unreadMessages: idsToSave});
+          await instance.post('/chat/markreadmessages', {msgIds: idsToSave});
+        }
       }
     } catch(err) {
       console.log("error:", err.message);

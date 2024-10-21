@@ -3,9 +3,15 @@ import styled from 'styled-components';
 
 function MessageBox({ sendMessage }) {
   const [message, setMessage] = useState('');
+  const keyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendMessage(message, setMessage);
+    }
+  }
   return (
     <Container>
-      <Input onChange={(e)=> setMessage(e.target.value)} value={message}/>
+      <Input onChange={(e)=> setMessage(e.target.value)} value={message} onKeyDown={keyDown}/>
       <Button onClick={()=> sendMessage(message, setMessage)}>Send</Button>
     </Container>
   )

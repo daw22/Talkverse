@@ -18,13 +18,13 @@ function MessagesBox({ modalOpen, setModalOpen, setSelectedUser }) {
   const onMessageClicked = async (message) => {
     setModalOpen('false');
     setSelectedUser(message.sender);
-    const remainingMsgs = messages.filter(msg => msg.sender._id === message.sender_id);
+    const remainingMsgs = messages.filter(msg => msg.sender._id !== message.sender._id);
     setMessages(remainingMsgs);
     const remainingMsgsIds = remainingMsgs.map(msg => msg._id);
     let unreadMsgsList = ctx.user.unreadMessages;
     unreadMsgsList = unreadMsgsList.filter(unMsg => remainingMsgsIds.includes(unMsg));
     ctx.setUser({...ctx.user, unreadMessages: unreadMsgsList});
-    instance.post('/chat/markreadmessages', {msgIds: unreadMsgsList});
+    await instance.post('/chat/markreadmessages', {msgIds: unreadMsgsList});
   }
 
   const formatTimeAgo = (date) => {
