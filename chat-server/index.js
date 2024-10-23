@@ -21,7 +21,7 @@ const io = new Server(server, {
   }
 });
 //redis
-export const redisClient = createClient({
+const redisClient = createClient({
   url: 'redis://red-cs92i8bqf0us738i4ddg:6379'
 });
 //midlewares
