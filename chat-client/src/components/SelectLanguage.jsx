@@ -1,14 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import Select from "react-select";
 import languagesList from '../assets/languages.json';
+import { userContext } from "../state/UserContext";
 
 const LanguageSelect = ({ formData, setFormData }) => {
+  const ctx = useContext(userContext);
   const [languages, setLanguages] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState("");
 
   useEffect(()=>{
     setLanguages(languagesList.languages);
-    setSelectedLanguage(languagesList.languages[32]);
+    if (ctx.user){
+      setSelectedLanguage({value: "xx", label: ctx.user.preferedLang});
+    } else {
+      setSelectedLanguage(languagesList.languages[32]);
+    }
   }, []);
 
   return (

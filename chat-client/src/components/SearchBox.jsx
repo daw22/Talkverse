@@ -16,13 +16,11 @@ function SearchBox() {
     const res = await instance.get(`/chat/search?q=${formData.searchText}&country=${country}`);
     if (res.status === 200) {
       setSearchResults(res.data);
-      console.log('result', res.data);
     }
   }
   const AddToContact = async (result) => {
     const contactIds = ctx.user.contacts.map((c)=> c._id);
     if(contactIds.includes(result._id)){
-      console.log('already exists');
       return;
     }
     const res = await instance.post('/chat/addcontact', 
@@ -30,13 +28,14 @@ function SearchBox() {
     );
 
     if (res.status == 200) {
-      console.log(res.data);
-      ctx.setUser(res.data);
+      ctx.setUser(res.data.user);
+      if (res.data.newContactOnline) ctx.setOnlineContacts([...ctx.onlineContacts, result._id]);
     }
   }
   useEffect(()=>{
     searchUser();
-  }, [formData])
+  }, [formData]);
+
   const [searchResults, setSearchResults] = useState([]);
   return (
     <Container onClick={(e)=> e.stopPropagation()}>
@@ -117,4 +116,5 @@ const AddToContactButton = styled.img`
     background: black;
   }
 `;
+
 export default SearchBox;

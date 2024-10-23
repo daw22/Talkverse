@@ -1,14 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import Select from "react-select";
 import country from '../assets/countries.json';
+import { userContext } from "../state/UserContext";
 
 const CountrySelect = ({ formData, setFormData }) => {
+  const ctx = useContext(userContext);
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState({});
 
   useEffect(()=>{
     setCountries(country.countries);
-    setSelectedCountry(country.countries[0]);
+    if (ctx.user){
+      setSelectedCountry({value: "xx", label: ctx.user.flag + " " +ctx.user.country});
+    } else {
+      setSelectedCountry(country.countries[0]);
+    }
   }, []);
 
   return (
