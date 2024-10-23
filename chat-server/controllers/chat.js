@@ -30,8 +30,6 @@ export const addContact = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   const { fromId } = req.query;
-  console.log(req.account.profile);
-  console.log(fromId);
   if(!fromId){
     return res.status(400).json({error: 'userId missing'});
   }
@@ -61,7 +59,6 @@ export const search = async (req, res) => {
       if (users) {
         if (country){
           const filtered = users.filter(user => user.profile.country.toLowerCase() == country.toLowerCase());
-          console.log(filtered);
           results = filtered.map(f => f.profile);
         } else {
           results = users.map(user => user.profile);
@@ -115,3 +112,4 @@ export const markReadmessages = async (req, res) => {
     res.status(500).end();
   }
 }
+

@@ -2,7 +2,7 @@ import Account from "../models/Account.js";
 import jwt from "jsonwebtoken";
 import crypto from 'crypto';
 import Profile from "../models/Profile.js";
-import { createClient } from "redis";
+import { redisClient } from "../index.js";
 
 const verifyPassword = (password, user) => {
   const hashedPassword = crypto
@@ -59,11 +59,7 @@ export const userLogin = async (req, res) => {
       });
       const onlineContacts = [];
       if(contactIds.length > 0){
-        const rClient = createClient({
-          url: 'redis://red-cs92i8bqf0us738i4ddg:6379'
-        });
-        await rClient.connect();
-        const onlineContactsVals = await rClient.mGet(contactIds);
+        const onlineContactsVals = await redisClient.mGet(contactIds);
         onlineContactsVals.forEach((val, index) => {
           if (val) onlineContacts.push(contactIds[index]);
         });
@@ -98,11 +94,7 @@ export const getProfile = async (req, res) => {
       contactIds.push(contact._id.toString());
     });
     if(contactIds.length > 0){
-      const rClient = createClient({
-        url: 'redis://red-cs92i8bqf0us738i4ddg:6379'
-      });
-      await rClient.connect();
-      const onlineContactsVals = await rClient.mGet(contactIds);
+      const onlineContactsVals = await redisClient.mGet(contactIds);
       onlineContactsVals.forEach((val, index) => {
         if (val) onlineContacts.push(contactIds[index]);
       })
@@ -113,5 +105,3 @@ export const getProfile = async (req, res) => {
     console.log(err.message, "getprofile");
   }
 }
-
-
