@@ -46,7 +46,7 @@ function SearchBox() {
           value={formData.searchText}
           placeholder="by @username or name"
         />
-        <SelectCountry formData={formData} setFormData={setFormData} />
+        <SelectCountry formData={formData} setFormData={setFormData} defaultCountry='Country'/>
         
       </SearchInputContainer>
       <ResultsListContainer>
