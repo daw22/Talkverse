@@ -7,6 +7,7 @@ Talkverse is web application and is built with the MERN stack. For real-time com
 ## To Run The Project Locally
 
 To run the project locally you need to have a running redis instance.
+
 Clone the project
 
 ```bash
