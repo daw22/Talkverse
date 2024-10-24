@@ -4,6 +4,9 @@ import SelectCountry from './SelectCountry';
 import SelectLanguage from './SelectLanguage';
 import instance from '../utils/axinstance';
 import { userContext } from '../state/UserContext';
+import { v4 } from 'uuid';
+import { storage } from '../utils/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 function UpdateProfile({ profile, closeModal }) {
   const ctx = useContext(userContext);
