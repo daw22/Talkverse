@@ -29,7 +29,14 @@ const safetySettings = [
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-flash-002",
   safetySettings: safetySettings,
-  systemInstruction: "i want you translate messages for me word by word with out any alteration. i will send you a json like this '{\"from\":  'german', \"to\": \"english\", \"content\": \"the message\"}' after translating from geramn to english send me back a json with the format '{\"language\": \"english\", \"content\": \"translated language\"} ",
+  systemInstruction: `i want you translate messages for me word by word without any alteration.
+   i will send you a json like this 
+   '{\"from\":  'german', \"to\": \"english\", \"content\": \"the message\"}' 
+   after translating from geramn to english send me back a json with the format 
+   '{\"language\": \"english\", \"content\": \"translated language\"}. 
+  Try to translate informal languge to your best ability 
+  or give a very very short explanation of the what the message means in the 
+  language you are asked to translate to, don't just send the same text back.`,
 });
 
 const generationConfig = {
