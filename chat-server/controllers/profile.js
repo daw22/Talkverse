@@ -39,7 +39,7 @@ export const createProfile = async (req, res) => {
 }
 
 export const updateProfile = async (req, res) => {
-  let {firstName, lastName, language, bio, country} = req.body;
+  let {firstName, lastName, language, bio, country, profilePic} = req.body;
   let flag = "";
   if (country) {
     flag = country.split(' ')[0];
@@ -54,6 +54,7 @@ export const updateProfile = async (req, res) => {
   }
   if(bio) data.bio = bio;
   if(language) data.preferedLang = language;
+  if(profilePic) data.profilePic = profilePic;
   try{
     await Profile.updateOne(
       {_id: req.user.profile},

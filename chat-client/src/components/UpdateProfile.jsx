@@ -12,17 +12,41 @@ function UpdateProfile({ profile, closeModal }) {
     lastName: "",
     language: "",
     country: "",
-    bio: "" 
+    bio: "",
+    profilePic: "",
   });
 
+  const [imageUpload, setImageUpload] = useState(null);
+  const [buttonText, setButtonText] = useState('save');
+
+  const uploadImage = async () => {
+    try{
+      const imageRef = ref(storage, `profilePics/${v4()}`);
+      const snapshot = await uploadBytes(imageRef, imageUpload);
+      const downloadUrl = await getDownloadURL(snapshot.ref);
+      return downloadUrl;
+    } catch(err){
+      console.log(err);
+      return "";
+    }
+  }
+
   const updateProfile = async () => {
-    const res = await instance.post('/profile/updateprofile', formData);
+    setButtonText('saving...');
+    let data = formData;
+    if (imageUpload) {
+      const downloadUrl = await uploadImage();
+      if (downloadUrl) data = { data, profilePic: downloadUrl}
+    }
+    const res = await instance.post('/profile/updateprofile', data);
     if (res.status == 201){
       ctx.setUser(res.data);
       console.log('new profile:', ctx.user);
+      setButtonText('save');
     }
     closeModal('false');
   }
+
   return (
     <Container onClick={(e) => e.stopPropagation()}>
       <TitleText>Edit Profile</TitleText>
@@ -40,8 +64,20 @@ function UpdateProfile({ profile, closeModal }) {
         <SelectCountry formData={formData} setFormData={setFormData} />
         <SelectLanguage formData={formData} setFormData={setFormData} />
       </FlexContainer>
+      <div style={{color: 'white', display: 'flex', gap:'1rem'}}>
+        <h5>change profile picture</h5>
+        <input
+          label="Image"
+          placeholder="change profile"
+          accept="image/png,image/jpeg"
+          type="file"
+          onChange={(e) => {
+            setImageUpload(e.target.files[0]);
+          }}
+        />
+      </div>
       <Bio placeholder={profile.bio}/>
-      <SaveButton onClick={updateProfile}>Save</SaveButton>
+      <SaveButton onClick={updateProfile}>{buttonText}</SaveButton>
     </Container>
   )
 }

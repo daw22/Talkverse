@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useRef, useCallback } from 'react'
+import { useState, useContext, useEffect, useRef} from 'react'
 import { userContext } from '../state/UserContext';
 import styled from 'styled-components';
 import instance from '../utils/axinstance';
@@ -298,9 +298,9 @@ const ChatArea = styled.div`
   overflow-y: auto;
 `;
 const Avatar = styled.img`
-  height: 48px;
-  width: 48px;
-  border-radius: 50%;
+  height: 50px;
+  width: 52px;
+  clip-path: circle();
   margin-top: 3rem;
 `
 const Name = styled.h3`
